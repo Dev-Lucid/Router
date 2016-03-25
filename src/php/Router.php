@@ -4,7 +4,8 @@ namespace Lucid\Component\Router;
 class Router implements RouterInterface
 {
     protected $logger = null;
-    public    $autoRouting = true;
+    public    $autoRoutingViews       = true;
+    public    $autoRoutingControllers = true;
     protected $fixedRoutes = [];
 
 
@@ -28,10 +29,6 @@ class Router implements RouterInterface
             return $this->fixedRoutes[$action];
         }
 
-        if ($this->autoRouting === false) {
-            throw new \Exception($routeFormatMessage);
-        }
-
         $splitAction = explode('.', $action);
         if (count($splitAction) < 2 || count($splitAction) > 3) {
             throw new \Exception($routeFormatMessage);
@@ -41,6 +38,13 @@ class Router implements RouterInterface
         $route['type'] = array_shift($splitAction);
         if ($route['type'] != 'view' && $route['type'] != 'controller') {
             throw new \Exception($routeFormatMessage);
+        }
+
+        if($route['type'] == 'view' && $this->autoRoutingViews === false) {
+            throw new \Exception('Could not find static route for '.$action.', and $router->autoRoutingViews === false. ');
+        }
+        if($route['type'] == 'controller' && $this->autoRoutingControllers === false) {
+            throw new \Exception('Could not find static route for '.$action.', and $router->autoRoutingControllers === false. ');
         }
 
         $route['class'] = array_shift($splitAction);
