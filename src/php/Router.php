@@ -22,24 +22,38 @@ class Router implements RouterInterface
 
     public function determineRoute($action)
     {
+        $routeFormatMessage = 'Incorrect format for action: '.$action.'. An action must contain 2-3 parts, separated by a period. The first part is either the string controller or view, the second part is either a name of the controller or view class (without the namespace), and the third part is the name of the method to be called of that class. If the name is ommitted for a view, the method name will be assumed to be ->render().';
+
         if (isset($this->fixedRoutes[$action])) {
             return $this->fixedRoutes[$action];
         }
 
         if ($this->autoRouting === false) {
-            throw new \Exception('Could not locate a route for action '.$action.', and router->autoRouting was set to false. Either enable autoRouting ($router->autoRouting = true;), or add a route for this action: $router->addRoute($action, $(\'view\' or \'controller\'), $final class name for that view or controller), $(method name of that view or controller)');
+            throw new \Exception($routeFormatMessage);
         }
 
         $splitAction = explode('.', $action);
-        if (count($splitAction) != 2) {
-            throw new \Exception('Incorrect format for action: '.$action.'. An action must contain two parts, separated by a period. The leftside part is either a controller name or the word \'view\', and the rightside part is either a method of the controller, or the name of the view to load.');
+        if (count($splitAction) < 2 || count($splitAction) > 3) {
+            throw new \Exception($routeFormatMessage);
         }
 
-        if ($splitAction[0] == 'view') {
-            return ['type'=>'view', 'class'=>$splitAction[1], 'method'=>'render'];
-        } else {
-            return ['type'=>'controller', 'class'=>$splitAction[0], 'method'=>$splitAction[1]];
+        $route = [];
+        $route['type'] = array_shift($splitAction);
+        if ($route['type'] != 'view' && $route['type'] != 'controller') {
+            throw new \Exception($routeFormatMessage);
         }
+
+        $route['class'] = array_shift($splitAction);
+        if (count($splitAction) > 0) {
+            $route['method'] = array_shift($splitAction);
+        } else {
+            if($route['type'] == 'controller') {
+                throw new \Exception('Incorrect format for action: '.$action.'. An action must contain 2-3 parts, separated by a period. The first part is either the string controller or view, the second part is either a name of the controller or view class (without the namespace), and the third part is the name of the method to be called of that class. If the name is ommitted for a view, the method name will be assumed to be ->render().');
+            }
+            $route['method'] = 'render';
+        }
+
+        return $route;
     }
 
     public function addRoute(string $action, string $type, string $classFinalName, string $classMethodName)
