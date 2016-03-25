@@ -36,7 +36,7 @@ class Router implements RouterInterface
         }
 
         if ($splitAction[0] == 'view') {
-            return ['type'=>'view', 'class'=>$splitAction[0], 'method'=>'render'];
+            return ['type'=>'view', 'class'=>$splitAction[1], 'method'=>'render'];
         } else {
             return ['type'=>'controller', 'class'=>$splitAction[0], 'method'=>$splitAction[1]];
         }
