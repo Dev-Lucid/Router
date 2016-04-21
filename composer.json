@@ -17,6 +17,9 @@
   "autoload": {
       "psr-4": {"Lucid\\Component\\Router\\": "/src/php"}
   },
+  "autoload-dev": {
+      "psr-4": {"Lucid\\Component\\Router\\": "src/php/"}
+  },
   "require":{
       "psr/log": "~1.0",
       "dev-lucid/basiclogger": "~1.0"
