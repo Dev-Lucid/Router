@@ -1,8 +1,7 @@
 {
-  "name": "router",
+  "name": "dev-lucid/router",
   "type":"library",
-  "repo": "devlucid/router",
-  "description": "",
+  "description": "A simple library for parsing routes.",
   "authors": [
       {
           "name":     "Mike Thorn",
@@ -18,8 +17,9 @@
   "autoload": {
       "psr-4": {"Lucid\\Component\\Router\\": "/src/php"}
   },
-  "autoload-dev": {
-      "psr-4": {"Lucid\\Component\\Router\\": "/src/php"}
+  "require":{
+      "psr/log": "~1.0",
+      "dev-lucid/basiclogger": ">1.0"
   },
   "license": "MIT",
   "bin": [

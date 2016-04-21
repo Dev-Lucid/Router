@@ -3,6 +3,6 @@ namespace Lucid\Component\Router;
 
 interface RouterInterface
 {
-    public function determineRoute($parameters);
-    public function addRoute(string $action, string $type, string $classFinalName, string $classMethodName);
+    public function determineRoute(string $route);
+    public function addFixedRoute(string $action, string $viewOrController, string $className, string $classMethodName);
 }

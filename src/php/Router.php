@@ -3,60 +3,62 @@ namespace Lucid\Component\Router;
 
 class Router implements RouterInterface
 {
-    protected $logger              = null;
-    public $autoRoutingViews       = true;
-    public $autoRoutingControllers = true;
-    protected $fixedRoutes         = [];
-    public $defaultMethod          = 'index';
+    protected $logger            = null;
+    protected $fixedRoutes       = [];
+    public $autoRouteViews       = true;
+    public $autoRouteControllers = true;
+    public $defaultViewMethod    = 'index';
 
-
-    public function __construct($logger)
+    public function __construct($logger=null)
     {
         if (is_null($logger)) {
             $this->logger = new \Lucid\Component\BasicLogger\BasicLogger();
         } else {
             if (is_object($logger) === false || in_array('Psr\\Log\\LoggerInterface', class_implements($logger)) === false) {
-                throw new \Exception('Factory contructor parameter $logger must either be null, or implement Psr\\Log\\LoggerInterface. If null is passed, then an instance of Lucid\\Component\\BasicLogger\\BasicLogger will be instantiated instead, and all messages will be passed along to error_log();');
+                throw new \Exception('Router contructor parameter $logger must either be null, or implement Psr\\Log\\LoggerInterface. If null is passed, then an instance of Lucid\\Component\\BasicLogger\\BasicLogger will be instantiated instead, and all messages will be passed along to error_log();');
             }
             $this->logger = $logger;
         }
     }
 
-    public function determineRoute($action)
+    public function determineRoute(string $route) : array
     {
-        $routeFormatMessage = 'Incorrect format for action: '.$action.'. An action must contain 2-3 parts, separated by a period. The first part is either the string controller or view, the second part is either a name of the controller or view class (without the namespace), and the third part is the name of the method to be called of that class. If the name is ommitted for a view, the method name will be assumed to be ->render().';
+        $routeFormatMessage = 'Incorrect format for route: '.$route.'. A route must contain 2-3 parts, separated by a period. The first part is either the name of a controller class or view class, the second part is either \'controller\' or \'view\', and the third part is the name of the method to be called of that class. For example, MyClass.controller.controllerMethodName, or MyClass.view.viewMethodName. If the name is ommitted for a view, the method name will be assumed to be the $defaultViewMethod property of the router object.';
 
-        if (isset($this->fixedRoutes[$action])) {
-            return $this->fixedRoutes[$action];
+        if (isset($this->fixedRoutes[$route]) === true) {
+            return $this->fixedRoutes[$route];
         }
 
-        $splitAction = explode('.', $action);
-        if (count($splitAction) < 2 || count($splitAction) > 3) {
+        $splitRoute = explode('.', $route);
+        if (count($splitRoute) == 2 && $splitRoute[1] == 'view') {
+            $splitRoute[] = $this->defaultViewMethod;
+        }
+        if (count($splitRoute) !=  3) {
             throw new \Exception($routeFormatMessage);
         }
 
-        $route = [];
-        $route['class'] = array_shift($splitAction);
-        $route['type'] = array_shift($splitAction);
-        
-        if ($route['type'] != 'view' && $route['type'] != 'controller') {
+        $routeArray = [];
+        $routeArray['class']  = array_shift($splitRoute);
+        $routeArray['type']   = array_shift($splitRoute);
+        $routeArray['method'] = array_shift($splitRoute);
+
+        if ($routeArray['type'] != 'view' && $routeArray['type'] != 'controller') {
             throw new \Exception($routeFormatMessage);
         }
 
-        if($route['type'] == 'view' && $this->autoRoutingViews === false) {
-            throw new \Exception('Could not find static route for '.$action.', and $router->autoRoutingViews === false. ');
+        if($routeArray['type'] == 'view' && $this->autoRouteViews === false) {
+            throw new \Exception('Could not find static route for '.$route.', and $router->autoRoutingViews === false. ');
         }
-        if($route['type'] == 'controller' && $this->autoRoutingControllers === false) {
-            throw new \Exception('Could not find static route for '.$action.', and $router->autoRoutingControllers === false. ');
+        if($routeArray['type'] == 'controller' && $this->autoRouteControllers === false) {
+            throw new \Exception('Could not find static route for '.$route.', and $router->autoRoutingControllers === false. ');
         }
 
-        $route['method'] = $splitAction[0] ?? $this->defaultMethod;
-
-        return $route;
+        return $routeArray;
     }
 
-    public function addRoute(string $action, string $type, string $classFinalName, string $classMethodName)
+    public function addFixedRoute(string $route, string $viewOrController, string $classFinalName,  string $className)
     {
-        $this->fixedRoutes[$action] = ['type'=>$type, 'class'=>$classFinalName, 'method'=>$classMethodName];
+        $this->fixedRoutes[$route] = ['type'=>$viewOrController, 'class'=>$classFinalName, 'method'=>$className];
+        return $this;
     }
 }
