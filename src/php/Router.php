@@ -3,22 +3,13 @@ namespace Lucid\Component\Router;
 
 class Router implements RouterInterface
 {
-    protected $logger            = null;
     protected $fixedRoutes       = [];
     public $autoRouteViews       = true;
     public $autoRouteControllers = true;
     public $defaultViewMethod    = 'index';
 
-    public function __construct($logger=null)
+    public function __construct()
     {
-        if (is_null($logger)) {
-            $this->logger = new \Lucid\Component\BasicLogger\BasicLogger();
-        } else {
-            if (is_object($logger) === false || in_array('Psr\\Log\\LoggerInterface', class_implements($logger)) === false) {
-                throw new \Exception('Router contructor parameter $logger must either be null, or implement Psr\\Log\\LoggerInterface. If null is passed, then an instance of Lucid\\Component\\BasicLogger\\BasicLogger will be instantiated instead, and all messages will be passed along to error_log();');
-            }
-            $this->logger = $logger;
-        }
     }
 
     public function determineRoute(string $route) : array
