@@ -237,4 +237,11 @@ $router->allowControllerMethods('Authentication', 'processLogin', 'processLogout
 
 In this configuration, you could add new classes (ex: App\View\Products and App\ControllerProducts) and routes will automatically work. Additionally, we've configured a view/controller named Authentication with some specific view / controller methods. 
 
+## Useful Files 
+I also included a couple useful files in the /useful folder:
+
+* apache\_mod\_rewrite.conf: an example of how to configure mod_rewrite for apache to work with this class. 
+* php\_inbuilt\_server.php: an example of how to use php's inbuilt server with rewriting to work with this class 
+
+
 ## What's wrong with other routers
