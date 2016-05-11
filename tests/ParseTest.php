@@ -1,59 +1,135 @@
 <?php
-use Lucid\Component\Router\Router;
+
+class ParseTest_View_TestClass
+{
+    public function method1()
+    {
+    }
+
+    public function method3()
+    {
+    }
+}
+
+class ParseTest_Controller_TestClass
+{
+    public function method2()
+    {
+    }
+
+    public function method3()
+    {
+    }
+}
+
+class ParseTest_View_TestClass2
+{
+    public function method1()
+    {
+    }
+}
 
 class ParseTest extends \PHPUnit_Framework_TestCase
 {
+    public function setupReallyAmbiguousRouter()
+    {
+        $router = new Lucid\Router\Router();
+        $router->setViewClassPrefixSuffix('ParseTest_View_');
+        $router->setControllerClassPrefixSuffix('ParseTest_Controller_');
+        $router->allowObjects('*');
+        $router->allowViewMethods('*', '*');
+        $router->allowControllerMethods('*', '*');
+        return $router;
+    }
+
+    public function setupLockedDownRouter()
+    {
+        $router = new Lucid\Router\Router();
+        $router->setViewClassPrefixSuffix('ParseTest_View_');
+        $router->setControllerClassPrefixSuffix('ParseTest_Controller_');
+        $router->allowObjects('TestClass');
+        $router->allowViewMethods('TestClass', 'method1');
+        $router->allowControllerMethods('TestClass', 'method2', 'method4');
+        return $router;
+    }
+
     public function testParse()
     {
-        $router = new Router();
+        $router = $this->setupReallyAmbiguousRouter();
 
-        $result = $router->determineRoute('MyClass.view.MyMethod');
-        $goodResult = ['type'=>'view', 'class'=>'MyClass', 'method'=>'MyMethod'];
-        ksort($result);
-        ksort($goodResult);
-        $this->assertEquals(print_r($result, true), print_r($goodResult, true));
+        $route = $router->parseRoute('TestClass/method1');
+        $this->assertEquals('ParseTest_View_TestClass', $route->class);
+        $this->assertEquals('method1', $route->method);
 
-        $result = $router->determineRoute('MyClass.controller.MyMethod');
-        $goodResult = ['type'=>'controller', 'class'=>'MyClass', 'method'=>'MyMethod'];
-        ksort($result);
-        ksort($goodResult);
-        $this->assertEquals(print_r($result, true), print_r($goodResult, true));
+        $route = $router->parseRoute('TestClass/method2');
+        $this->assertEquals('ParseTest_Controller_TestClass', $route->class);
+        $this->assertEquals('method2', $route->method);
     }
 
-    public function testAutoRoute()
+    public function testAmbiguous()
     {
-        $router = new Router();
-        $router->addFixedRoute('mytestroute1', 'view',       'MyClass', 'MyMethod');
-        $router->addFixedRoute('mytestroute2', 'controller', 'MyClass', 'MyMethod');
-
-        $result = $router->determineRoute('mytestroute1');
-        $goodResult = ['type'=>'view', 'class'=>'MyClass', 'method'=>'MyMethod'];
-        ksort($result);
-        ksort($goodResult);
-        $this->assertEquals(print_r($result, true), print_r($goodResult, true));
-
-        $result = $router->determineRoute('mytestroute2');
-        $goodResult = ['type'=>'controller', 'class'=>'MyClass', 'method'=>'MyMethod'];
-        ksort($result);
-        ksort($goodResult);
-        $this->assertEquals(print_r($result, true), print_r($goodResult, true));
+        $router = $this->setupReallyAmbiguousRouter();
+        $this->setExpectedException(Lucid\Router\Exception\AmbiguousRequest::class);
+        $router->parseRoute('TestClass/method3');
     }
 
-    public function testDefaultViewProperty()
+    public function testNotFound()
     {
-        $router = new Router();
+        $router = $this->setupReallyAmbiguousRouter();
+        $this->setExpectedException(Lucid\Router\Exception\ClassNotFound::class);
+        $router->parseRoute('/TestClassDoesntExist/method3');
+    }
 
-        $result = $router->determineRoute('MyClass.view');
-        $goodResult = ['type'=>'view', 'class'=>'MyClass', 'method'=>'index'];
-        ksort($result);
-        ksort($goodResult);
-        $this->assertEquals(print_r($result, true), print_r($goodResult, true));
+    public function testRouteFormat1()
+    {
+        $router = $this->setupReallyAmbiguousRouter();
+        $this->setExpectedException(Lucid\Router\Exception\IncorrectFormat::class);
+        $router->parseRoute('/TestClassDoesntExist->method3');
+    }
+    public function testRouteFormat2()
+    {
+        $router = $this->setupReallyAmbiguousRouter();
+        $this->setExpectedException(Lucid\Router\Exception\IncorrectFormat::class);
+        $router->parseRoute('/view.TestClass.method2');
+    }
 
-        $router->defaultViewMethod = 'MyMethod';
-        $result = $router->determineRoute('MyClass.view');
-        $goodResult = ['type'=>'view', 'class'=>'MyClass', 'method'=>'MyMethod'];
-        ksort($result);
-        ksort($goodResult);
-        $this->assertEquals(print_r($result, true), print_r($goodResult, true));
+    public function testForbiddenObject()
+    {
+        $router1 = $this->setupReallyAmbiguousRouter();
+        $route = $router1->parseRoute('TestClass2/method1');
+        $this->assertEquals('ParseTest_View_TestClass2', $route->class);
+        $this->assertEquals('method1', $route->method);
+
+        $router2 = $this->setupLockedDownRouter();
+        $this->setExpectedException(Lucid\Router\Exception\ForbiddenObject::class);
+        $route = $router2->parseRoute('TestClass2/method1');
+    }
+
+    public function testForbiddenMethod()
+    {
+        $router1 = $this->setupReallyAmbiguousRouter();
+        $route = $router1->parseRoute('TestClass2/method1');
+        $this->assertEquals('ParseTest_View_TestClass2', $route->class);
+        $this->assertEquals('method1', $route->method);
+
+        $router2 = $this->setupLockedDownRouter();
+
+        $route = $router2->parseRoute('TestClass/method1');
+        $this->assertEquals('ParseTest_View_TestClass', $route->class);
+        $this->assertEquals('method1', $route->method);
+
+        $route = $router2->parseRoute('TestClass/method2');
+        $this->assertEquals('ParseTest_Controller_TestClass', $route->class);
+        $this->assertEquals('method2', $route->method);
+
+        $this->setExpectedException(Lucid\Router\Exception\ForbiddenMethod::class);
+        $route = $router2->parseRoute('TestClass/method3');
+    }
+
+    public function testMethodNotFound()
+    {
+        $router1 = $this->setupLockedDownRouter();
+        $this->setExpectedException(Lucid\Router\Exception\MethodNotFound::class);
+        $route = $router1->parseRoute('TestClass/method4');
     }
 }
