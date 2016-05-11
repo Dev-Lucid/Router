@@ -11,7 +11,7 @@ namespace Lucid\Router;
 
 /**
  *
- * A collection of route objects.
+ * The actual Router class. has setter methods for configuration, and ->parseRoute()
  *
  * @package Lucid.Router
  *
