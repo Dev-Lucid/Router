@@ -1,46 +1,173 @@
 <?php
+/*
+ * This file is part of the Lucid Container package.
+ *
+ * (c) Mike Thorn <mthorn@devlucid.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
 namespace Lucid\Router;
 
+/**
+ *
+ * A collection of route objects.
+ *
+ * @package Lucid.Router
+ *
+ */
 class Router
 {
-    protected $delimiter             = '/';
-    protected $parameterNames        = ['id','name'];
+    /**
+     *
+     * A string used to explode routes into parts
+     *
+     * @var string
+     *
+     */
+    protected $delimiter = '/';
 
-    protected $viewClassPrefix       = 'App\\Controller\\';
-    protected $viewClassSuffix       = '';
+    /**
+     *
+     * An array of the default names of additional parameters found in a url
+     *
+     * @var array
+     *
+     */
+    protected $parameterNames = ['id','name'];
+
+    /**
+     *
+     * The prefix used for view classes to fully qualify them
+     *
+     * @var string
+     *
+     */
+    protected $viewClassPrefix = 'App\\Controller\\';
+
+    /**
+     *
+     * The suffix used for view classes to fully qualify them
+     *
+     * @var string
+     *
+     */
+    protected $viewClassSuffix = '';
+
+    /**
+     *
+     * The prefix used for controller classes to fully qualify them
+     *
+     * @var string
+     *
+     */
     protected $controllerClassPrefix = 'App\\Controller\\';
+
+    /**
+     *
+     * The suffix used for controller classes to fully qualify them
+     *
+     * @var string
+     *
+     */
     protected $controllerClassSuffix = '';
 
-    protected $objects               = [];
-    protected $viewMethods           = [];
-    protected $controllerMethods     = [];
+    /**
+     *
+     * An array of allowed objects
+     *
+     * @var array
+     *
+     */
+    protected $objects = [];
 
+    /**
+     *
+     * An array of arrays of allowed methods for views. The key for the first array is the final
+     * name of a specific view class, or '*'. The value of the inner array is the name of the
+     * allowed method.
+     *
+     * @var array
+     *
+     */
+    protected $viewMethods = [];
+
+    /**
+     *
+     * An array of arrays of allowed methods for controllers. The key for the first array is the final
+     * name of a specific controller class, or '*'. The value of the inner array is the name of the
+     * allowed method.
+     *
+     * @var array
+     *
+     */
+    protected $controllerMethods = [];
+
+    /**
+     *
+     * Constructor.
+     *
+     */
     public function __construct()
     {
     }
 
+    /**
+     *
+     * Sets the delimiter to use when exploding routes
+     *
+     * @return null
+     *
+     */
     public function setDelimiter(string $delimiter)
     {
         $this->delimiter = $delimiter;
     }
 
+    /**
+     *
+     * Sets the default names for parameters found in the url when parsing
+     *
+     * @return null
+     *
+     */
     public function setParameterNames(...$names)
     {
         $this->parameterNames = $names;
     }
 
+    /**
+     *
+     * Sets protected properties $viewClassPrefix and $viewClassSuffix
+     *
+     * @return null
+     *
+     */
     public function setViewClassPrefixSuffix(string $prefix = '', string $suffix = '')
     {
         $this->viewClassPrefix = $prefix;
         $this->viewClassSuffix = $suffix;
     }
 
+    /**
+     *
+     * Sets protected properties $controllerClassPrefix and $controllerClassSuffix
+     *
+     * @return null
+     *
+     */
     public function setControllerClassPrefixSuffix(string $prefix = '', string $suffix = '')
     {
         $this->controllerClassPrefix = $prefix;
         $this->controllerClassSuffix = $suffix;
     }
 
+    /**
+     * Adds new objects to protected array $objects
+     *
+     * @return null
+     *
+     */
     public function allowObjects(...$allowedObjects)
     {
         foreach ($allowedObjects as $object) {
@@ -48,6 +175,12 @@ class Router
         }
     }
 
+    /**
+     * Adds allowed view methods for an object
+     *
+     * @return null
+     *
+     */
     public function allowViewMethods(string $object, ...$allowedMethods)
     {
         if (isset($this->viewMethods[$object]) === false) {
@@ -59,6 +192,12 @@ class Router
         }
     }
 
+    /**
+     * Adds allowed controller methods for an object
+     *
+     * @return null
+     *
+     */
     public function allowControllerMethods(string $object, ...$allowedMethods)
     {
         if (isset($this->controllerMethods[$object]) === false) {
@@ -70,12 +209,22 @@ class Router
         }
     }
 
+    /**
+     * Parses a string, determines what class and method the route should map to, and returns an
+     * instance of Lucid\Router\Route
+     *
+     * @return Lucid\Router\Route
+     *
+     */
     public function parseRoute(string $route) : Route
     {
+        # removing a leading / if necessary
         if (strpos($route, $this->delimiter) === 0){
             $route = substr($route, 1);
         }
 
+        # split the route using the configured delimiter, throw an exception if there aren't
+        # at least two parts to the route string
         $routeParts = explode($this->delimiter, $route);
         if (count($routeParts) < 2) {
             throw new Exception\IncorrectFormat($route, $this->delimiter);
@@ -84,6 +233,8 @@ class Router
         $object = array_shift($routeParts);
         $method = array_shift($routeParts);
         $parameters = [];
+
+        # loop over remaining parts of the route and build the parameters array
         $index = 0;
         while(count($routeParts) > 0){
             $name = $this->parameterNames[$index] ?? 'parameter'.$index;
@@ -91,6 +242,8 @@ class Router
             $index++;
         }
 
+        # Determine whether this refers to a view or a controller method. Start by disallowing both,
+        # allow if we find matching rules
         $allowView       = false;
         $allowController = false;
         $viewClass       = $this->viewClassPrefix . $object . $this->viewClassSuffix;
