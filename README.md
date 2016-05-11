@@ -65,9 +65,9 @@ Note that instances of Lucid\Router\Route have a public method ->execute(...$con
 ### Allowing Objects/Methods
 There are 3 main things you'll likely want to set to use this router, and all 3 can be set to allow anything.  All 3 are set using setter methods:
 
-* Which classes are allowed via routes. This is set by calling ->setAllowedObjects(...string $names). If you call this and pass '*' as a value, then the router will allow any class name
-* Which view methods are allowed via routes. This is set by calling ->setAllowedViewMethods(string $objectName, ...$methodNames). 
-* Which controller methods are allowed via routes. This is set by calling ->setAllowedControllerMethods(string $objectName, ...$methodNames).
+* Which classes are allowed via routes. This is set by calling ->allowedObjects(...string $names). If you call this and pass '*' as a value, then the router will allow any class name
+* Which view methods are allowed via routes. This is set by calling ->allowViewMethods(string $objectName, ...$methodNames). 
+* Which controller methods are allowed via routes. This is set by calling ->allowControllerMethods(string $objectName, ...$methodNames).
  
 Here's a detailed example of all 3 methods being used in a fairly restricted configuration:
 
@@ -96,7 +96,6 @@ $router->allowViewMethods('Products', 'viewOne', 'viewSimilar');
 # Accessing any other method will throw a ForbiddenMethod exception
 $router->allowControllerMethods('Products', 'save', 'addToCart);
 ```
-
 
 ### Configuring Namespaces
 By default, the class name for a view is prefixed with 'App\View\' to make it fully qualifed, and the class name for a controller is prefixed with 'App\Controller'. You can change these defaults by calling two setter methods:
@@ -243,5 +242,11 @@ I also included a couple useful files in the /useful folder:
 * apache\_mod\_rewrite.conf: an example of how to configure mod_rewrite for apache to work with this class. 
 * php\_inbuilt\_server.php: an example of how to use php's inbuilt server with rewriting to work with this class 
 
+## Future Features
 
-## What's wrong with other routers
+Here's a list of things I *may* add in the future:
+
+* A way to configure parameter names per object/method
+* Mapping routes to closures rather than classes / methods
+* Aliases for internationalizing routes (/Products/list and /Produits/list both map to App\View\Products->list)
+
