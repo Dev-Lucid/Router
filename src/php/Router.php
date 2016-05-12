@@ -16,7 +16,7 @@ namespace Lucid\Router;
  * @package Lucid.Router
  *
  */
-class Router
+class Router implements RouterInterface
 {
     /**
      *
