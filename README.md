@@ -65,7 +65,7 @@ Note that instances of Lucid\Router\Route have a public method ->execute(...$con
 ### Allowing Objects/Methods
 There are 3 main things you'll likely want to set to use this router, and all 3 can be set to allow anything.  All 3 are set using setter methods:
 
-* Which classes are allowed via routes. This is set by calling ->allowedObjects(...string $names). If you call this and pass '*' as a value, then the router will allow any class name
+* Which classes are allowed via routes. This is set by calling ->allowObjects(...string $names). If you call this and pass '*' as a value, then the router will allow any class name
 * Which view methods are allowed via routes. This is set by calling ->allowViewMethods(string $objectName, ...$methodNames). 
 * Which controller methods are allowed via routes. This is set by calling ->allowControllerMethods(string $objectName, ...$methodNames).
  
