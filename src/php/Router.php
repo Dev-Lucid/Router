@@ -43,7 +43,7 @@ class Router implements RouterInterface
      * @var string
      *
      */
-    protected $viewClassPrefix = 'App\\Controller\\';
+    protected $viewClassPrefix = 'App\\View\\';
 
     /**
      *
